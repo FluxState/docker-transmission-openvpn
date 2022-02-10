@@ -43,6 +43,8 @@ commands:
         type: string
       image-name:
         type: string
+      platform:
+        type: string
     steps:
       - run:
           name: Build and push images
