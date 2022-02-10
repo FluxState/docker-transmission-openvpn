@@ -121,7 +121,7 @@ workflows:
             branches:
               only:
                 - edge
-                - "fix/circleci-arm"
+                - fix-circleci-arm
             tags:
               only: /^\d+\.\d+.*/
 
