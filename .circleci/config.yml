@@ -69,7 +69,7 @@ commands:
           command: |
             docker manifest create \
             << parameters.image-name >>:$TAG_VERSION \
-            --amend << parameters.image-name >>:arm64 \
+            --amend << parameters.image-name >>:aarch64 \
             --amend << parameters.image-name >>:x86_64
             docker manifest push << parameters.image-name >>:$TAG VERSION
 
