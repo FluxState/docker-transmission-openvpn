@@ -143,7 +143,6 @@ workflows:
             branches:
               only:
                 - edge
-                - circleci-manifest
             tags:
               only: /^\d+\.\d+.*/
       - build-arm:
@@ -155,7 +154,6 @@ workflows:
             branches:
               only:
                 - edge
-                - circleci-manifest
             tags:
               only: /^\d+\.\d+.*/
       - manifest:
@@ -166,7 +164,6 @@ workflows:
             branches:
               only:
                 - edge
-                - circleci-manifest
             tags:
               only: /^\d+\.\d+.*/
           requires:
@@ -182,7 +179,6 @@ workflows:
             branches:
               only:
                 - edge
-                - circleci-manifest
             tags:
               only: /^\d+\.\d+.*/
       - build-arm:
@@ -194,7 +190,6 @@ workflows:
             branches:
               only:
                 - edge
-                - circleci-manifest
             tags:
               only: /^\d+\.\d+.*/
       - manifest:
@@ -205,7 +200,6 @@ workflows:
             branches:
               only:
                 - edge
-                - circleci-manifest
             tags:
               only: /^\d+\.\d+.*/
           requires:
@@ -221,7 +215,6 @@ workflows:
             branches:
               only:
                 - edge
-                - circleci-manifest
             tags:
               only: /^\d+\.\d+.*/
       - build-arm:
@@ -233,7 +226,6 @@ workflows:
             branches:
               only:
                 - edge
-                - circleci-manifest
             tags:
               only: /^\d+\.\d+.*/
       - manifest:
@@ -244,7 +236,6 @@ workflows:
             branches:
               only:
                 - edge
-                - circleci-manifest
             tags:
               only: /^\d+\.\d+.*/
           requires:
