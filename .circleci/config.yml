@@ -71,7 +71,7 @@ commands:
             << parameters.image-name >>:$TAG_VERSION \
             --amend << parameters.image-name >>:aarch64 \
             --amend << parameters.image-name >>:x86_64
-            docker manifest push << parameters.image-name >>:$TAG VERSION
+            docker manifest push << parameters.image-name >>:$TAG_VERSION
 
 
 defaults: &defaults
@@ -182,6 +182,7 @@ workflows:
             branches:
               only:
                 - edge
+                - circleci-manifest
             tags:
               only: /^\d+\.\d+.*/
       - build-arm:
@@ -193,6 +194,7 @@ workflows:
             branches:
               only:
                 - edge
+                - circleci-manifest
             tags:
               only: /^\d+\.\d+.*/
       - manifest:
@@ -219,6 +221,7 @@ workflows:
             branches:
               only:
                 - edge
+                - circleci-manifest
             tags:
               only: /^\d+\.\d+.*/
       - build-arm:
@@ -230,6 +233,7 @@ workflows:
             branches:
               only:
                 - edge
+                - circleci-manifest
             tags:
               only: /^\d+\.\d+.*/
       - manifest:
