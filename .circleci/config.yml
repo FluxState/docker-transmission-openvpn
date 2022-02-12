@@ -55,6 +55,7 @@ commands:
               --build-arg CI=1 \
               --build-arg REVISION=$REVISION \
               --platform << parameters.platform >> \
+              --progress plain \
               --push << parameters.build-context >>
 
   create-manifest:
@@ -168,6 +169,9 @@ workflows:
                 - circleci-manifest
             tags:
               only: /^\d+\.\d+.*/
+          requires:
+            - build-transmission-vpn-edge-images
+            - build-transmission-vpn-edge-images-arm
 
       - build:
           name: build-reverse-proxy-images
@@ -181,7 +185,7 @@ workflows:
             tags:
               only: /^\d+\.\d+.*/
       - build-arm:
-          name: build-reverse-proxy-images
+          name: build-reverse-proxy-images-arm
           context: dockerhub
           image-name: fluxstate/transmission-vpn-proxy-edge
           build-context: "proxy"
@@ -191,6 +195,20 @@ workflows:
                 - edge
             tags:
               only: /^\d+\.\d+.*/
+      - manifest:
+          name: create-manifest
+          context: dockerhub
+          image-name: fluxstate/transmission-vpn-proxy-edge
+          filters:
+            branches:
+              only:
+                - edge
+                - circleci-manifest
+            tags:
+              only: /^\d+\.\d+.*/
+          requires:
+            - build-reverse-proxy-images
+            - build-reverse-proxy-images-arm
 
       - build:
           name: build-rss-plugin-images
@@ -204,7 +222,7 @@ workflows:
             tags:
               only: /^\d+\.\d+.*/
       - build-arm:
-          name: build-rss-plugin-images
+          name: build-rss-plugin-images-arm
           context: dockerhub
           image-name: fluxstate/transmission-rss-edge
           build-context: "plugins/rss"
@@ -214,3 +232,17 @@ workflows:
                 - edge
             tags:
               only: /^\d+\.\d+.*/
+      - manifest:
+          name: create-manifest
+          context: dockerhub
+          image-name: fluxstate/transmission-rss-edge
+          filters:
+            branches:
+              only:
+                - edge
+                - circleci-manifest
+            tags:
+              only: /^\d+\.\d+.*/
+          requires:
+            - build-rss-plugin-images
+            - build-rss-plugin-images-arm
