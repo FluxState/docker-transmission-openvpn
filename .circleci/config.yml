@@ -17,10 +17,12 @@ commands:
             else
               TAG_VERSION=$CIRCLE_BRANCH;
             fi
+            TAG_PLATFORM="$(uname -m)"
             REVISION="$(git ls-remote https://github.com/transmission/transmission.git HEAD | awk '{print substr ($0, 0, 7)}')"
 
-            echo "export IMAGE_TAG=$TAG_VERSION$TAG_DISTRO" >> $BASH_ENV
+            echo "export IMAGE_TAG='$TAG_VERSION-$TAG_PLATFORM'" >> $BASH_ENV
             echo "export REVISION='${REVISION}-${CIRCLE_SHA1}'" >> $BASH_ENV
+            echo "export TAG_VERSION='$TAG_VERSION'" >> $BASH_ENV
 
   install-git:
     description: "Installs Git binary."
@@ -53,7 +55,23 @@ commands:
               --build-arg CI=1 \
               --build-arg REVISION=$REVISION \
               --platform << parameters.platform >> \
+              --progress plain \
               --push << parameters.build-context >>
+
+  create-manifest:
+    description: "Creates combined manifest."
+    parameters:
+      image-name:
+        type: string
+    steps:
+      - run:
+          name: Create manifest
+          command: |
+            docker manifest create \
+            << parameters.image-name >>:$TAG_VERSION \
+            --amend << parameters.image-name >>:$TAG_VERSION-aarch64 \
+            --amend << parameters.image-name >>:$TAG_VERSION-x86_64
+            docker manifest push << parameters.image-name >>:$TAG_VERSION
 
 
 defaults: &defaults
@@ -63,14 +81,21 @@ defaults: &defaults
   machine:
     image: ubuntu-2004:202111-02
   parameters:
+    image-name:
+      type: string
+
+build-defaults: &build-defaults
+  <<: *defaults
+  parameters:
     build-context:
       type: string
     image-name:
       type: string
 
+
 jobs:
   build:
-    <<: *defaults
+    <<: *build-defaults
     steps:
       - git-shallow-clone/checkout:
           fetch_depth: 1
@@ -83,7 +108,7 @@ jobs:
           platform: "linux/amd64"
 
   build-arm:
-    <<: *defaults
+    <<: *build-defaults
     resource_class: arm.medium
     steps:
       - git-shallow-clone/checkout:
@@ -95,6 +120,14 @@ jobs:
           build-context: << parameters.build-context >>
           image-name: << parameters.image-name >>
           platform: "linux/arm64"
+
+  manifest:
+    <<: *defaults
+    steps:
+      - login-to-dockerhub
+      - calculate-tag-name
+      - create-manifest:
+          image-name: << parameters.image-name >>
 
 
 workflows:
@@ -113,7 +146,7 @@ workflows:
             tags:
               only: /^\d+\.\d+.*/
       - build-arm:
-          name: build-transmission-vpn-edge-images
+          name: build-transmission-vpn-edge-images-arm
           context: dockerhub
           image-name: fluxstate/transmission-vpn-edge
           build-context: "."
@@ -121,9 +154,21 @@ workflows:
             branches:
               only:
                 - edge
-                - fix-circleci-arm
             tags:
               only: /^\d+\.\d+.*/
+      - manifest:
+          name: create-manifest
+          context: dockerhub
+          image-name: fluxstate/transmission-vpn-edge
+          filters:
+            branches:
+              only:
+                - edge
+            tags:
+              only: /^\d+\.\d+.*/
+          requires:
+            - build-transmission-vpn-edge-images
+            - build-transmission-vpn-edge-images-arm
 
       - build:
           name: build-reverse-proxy-images
@@ -137,7 +182,7 @@ workflows:
             tags:
               only: /^\d+\.\d+.*/
       - build-arm:
-          name: build-reverse-proxy-images
+          name: build-reverse-proxy-images-arm
           context: dockerhub
           image-name: fluxstate/transmission-vpn-proxy-edge
           build-context: "proxy"
@@ -147,6 +192,19 @@ workflows:
                 - edge
             tags:
               only: /^\d+\.\d+.*/
+      - manifest:
+          name: create-manifest-proxy
+          context: dockerhub
+          image-name: fluxstate/transmission-vpn-proxy-edge
+          filters:
+            branches:
+              only:
+                - edge
+            tags:
+              only: /^\d+\.\d+.*/
+          requires:
+            - build-reverse-proxy-images
+            - build-reverse-proxy-images-arm
 
       - build:
           name: build-rss-plugin-images
@@ -160,7 +218,7 @@ workflows:
             tags:
               only: /^\d+\.\d+.*/
       - build-arm:
-          name: build-rss-plugin-images
+          name: build-rss-plugin-images-arm
           context: dockerhub
           image-name: fluxstate/transmission-rss-edge
           build-context: "plugins/rss"
@@ -170,3 +228,16 @@ workflows:
                 - edge
             tags:
               only: /^\d+\.\d+.*/
+      - manifest:
+          name: create-manifest-rss
+          context: dockerhub
+          image-name: fluxstate/transmission-rss-edge
+          filters:
+            branches:
+              only:
+                - edge
+            tags:
+              only: /^\d+\.\d+.*/
+          requires:
+            - build-rss-plugin-images
+            - build-rss-plugin-images-arm
