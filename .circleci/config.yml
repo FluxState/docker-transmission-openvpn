@@ -80,14 +80,21 @@ defaults: &defaults
   machine:
     image: ubuntu-2004:202111-02
   parameters:
+    image-name:
+      type: string
+
+build-defaults: &build-defaults
+  <<: *defaults
+  parameters:
     build-context:
       type: string
     image-name:
       type: string
 
+
 jobs:
   build:
-    <<: *defaults
+    <<: *build-defaults
     steps:
       - git-shallow-clone/checkout:
           fetch_depth: 1
@@ -100,7 +107,7 @@ jobs:
           platform: "linux/amd64"
 
   build-arm:
-    <<: *defaults
+    <<: *build-defaults
     resource_class: arm.medium
     steps:
       - git-shallow-clone/checkout:
