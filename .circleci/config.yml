@@ -17,10 +17,12 @@ commands:
             else
               TAG_VERSION=$CIRCLE_BRANCH;
             fi
+            TAG_PLATFORM="$(uname -m)"
             REVISION="$(git ls-remote https://github.com/transmission/transmission.git HEAD | awk '{print substr ($0, 0, 7)}')"
 
-            echo "export IMAGE_TAG=$TAG_VERSION$TAG_DISTRO" >> $BASH_ENV
+            echo "export IMAGE_TAG='$TAG_VERSION-$TAG_PLATFORM'" >> $BASH_ENV
             echo "export REVISION='${REVISION}-${CIRCLE_SHA1}'" >> $BASH_ENV
+            echo "export TAG_VERSION='$TAG_VERSION'" >> $BASH_ENV
 
   install-git:
     description: "Installs Git binary."
@@ -54,6 +56,21 @@ commands:
               --build-arg REVISION=$REVISION \
               --platform << parameters.platform >> \
               --push << parameters.build-context >>
+
+  create-manifest:
+    description: "Creates combined manifest."
+    parameters:
+      image-name:
+        type: string
+    steps:
+      - run:
+          name: Create manifest
+          command: |
+            docker manifest create \
+            << parameters.image-name >>:$TAG_VERSION \
+            --amend << parameters.image-name >>:arm64 \
+            --amend << parameters.image-name >>:x86_64
+            docker manifest push << parameters.image-name >>:$TAG VERSION
 
 
 defaults: &defaults
@@ -96,6 +113,14 @@ jobs:
           image-name: << parameters.image-name >>
           platform: "linux/arm64"
 
+  manifest:
+    <<: *defaults
+    steps:
+      - login-to-dockerhub
+      - calculate-tag-name
+      - create-manifest:
+          image-name: << parameters.image-name >>
+
 
 workflows:
 
@@ -110,10 +135,11 @@ workflows:
             branches:
               only:
                 - edge
+                - circleci-manifest
             tags:
               only: /^\d+\.\d+.*/
       - build-arm:
-          name: build-transmission-vpn-edge-images
+          name: build-transmission-vpn-edge-images-arm
           context: dockerhub
           image-name: fluxstate/transmission-vpn-edge
           build-context: "."
@@ -121,7 +147,18 @@ workflows:
             branches:
               only:
                 - edge
-                - fix-circleci-arm
+                - circleci-manifest
+            tags:
+              only: /^\d+\.\d+.*/
+      - manifest:
+          name: create-manifest
+          context: dockerhub
+          image-name: fluxstate/transmission-vpn-edge
+          filters:
+            branches:
+              only:
+                - edge
+                - circleci-manifest
             tags:
               only: /^\d+\.\d+.*/
 
