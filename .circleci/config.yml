@@ -69,8 +69,8 @@ commands:
           command: |
             docker manifest create \
             << parameters.image-name >>:$TAG_VERSION \
-            --amend << parameters.image-name >>:aarch64 \
-            --amend << parameters.image-name >>:x86_64
+            --amend << parameters.image-name >>:$TAG_VERSION-aarch64 \
+            --amend << parameters.image-name >>:$TAG_VERSION-x86_64
             docker manifest push << parameters.image-name >>:$TAG_VERSION
 
 
@@ -198,7 +198,7 @@ workflows:
             tags:
               only: /^\d+\.\d+.*/
       - manifest:
-          name: create-manifest
+          name: create-manifest-proxy
           context: dockerhub
           image-name: fluxstate/transmission-vpn-proxy-edge
           filters:
@@ -237,7 +237,7 @@ workflows:
             tags:
               only: /^\d+\.\d+.*/
       - manifest:
-          name: create-manifest
+          name: create-manifest-rss
           context: dockerhub
           image-name: fluxstate/transmission-rss-edge
           filters:
