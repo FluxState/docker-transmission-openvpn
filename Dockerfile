@@ -12,7 +12,7 @@ RUN --mount=id=apt,sharing=private,target=/var/cache/apt,type=cache \
     DEBIAN_FRONTEND=noninteractive apt-get install -y \
     automake autoconf build-essential clang-14 cmake devscripts libtool pkg-config \
     intltool libcurl4-openssl-dev libglib2.0-dev libevent-dev libminiupnpc-dev \
-    xfslibs-dev \
+    xfslibs-dev libdeflate0 libdeflate-dev \
     && sed -i '/deb-src/s/^# //' /etc/apt/sources.list \
     && curl -fsSL https://deb.nodesource.com/gpgkey/nodesource.gpg.key | gpg --dearmor | tee "/usr/share/keyrings/nodesource.gpg" \
     && gpg --no-default-keyring --keyring "/usr/share/keyrings/nodesource.gpg" --list-keys \
