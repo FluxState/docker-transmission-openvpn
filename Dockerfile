@@ -12,7 +12,7 @@ RUN --mount=id=apt,sharing=private,target=/var/cache/apt,type=cache \
     DEBIAN_FRONTEND=noninteractive apt-get install -y \
     automake autoconf build-essential clang-14 cmake devscripts libtool pkg-config \
     intltool libcurl4-openssl-dev libglib2.0-dev libevent-dev libminiupnpc-dev \
-    xfslibs-dev libdeflate0 libdeflate-dev \
+    xfslibs-dev libdeflate-dev \
     && sed -i '/deb-src/s/^# //' /etc/apt/sources.list \
     && curl -fsSL https://deb.nodesource.com/gpgkey/nodesource.gpg.key | gpg --dearmor | tee "/usr/share/keyrings/nodesource.gpg" \
     && gpg --no-default-keyring --keyring "/usr/share/keyrings/nodesource.gpg" --list-keys \
@@ -71,7 +71,7 @@ RUN --mount=id=apt,sharing=private,target=/var/cache/apt,type=cache \
     --mount=id=aptlists,sharing=private,target=/var/lib/apt/lists,type=cache \
     apt-get update && DEBIAN_FRONTEND=noninteractive apt-get dist-upgrade -y && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y \
-    dumb-init openvpn transmission-daemon transmission-cli privoxy \
+    dumb-init openvpn transmission-daemon transmission-cli privoxy libdeflate0 \
     tzdata dnsutils iputils-ping ufw openssh-client git jq curl wget unrar unzip bc \
     && ln -s /usr/share/transmission/web/style /opt/transmission-ui/transmission-web-control \
     && ln -s /usr/share/transmission/web/images /opt/transmission-ui/transmission-web-control \
