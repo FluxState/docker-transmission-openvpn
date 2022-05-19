@@ -56,7 +56,8 @@ commands:
               --build-arg REVISION=$REVISION \
               --platform << parameters.platform >> \
               --progress plain \
-              --push << parameters.build-context >>
+              --push << parameters.build-context >> \
+              --target transmission
 
   create-manifest:
     description: "Creates combined manifest."

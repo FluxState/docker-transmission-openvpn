@@ -1,13 +1,10 @@
-# syntax=docker/dockerfile:1.2
-FROM ubuntu:22.04 as TransmissionBuild
+FROM ubuntu:22.04 as transmission_build
 
 ARG CACHEBUST="1"
 RUN echo "$CACHEBUST"
 ARG CI=""
 
-RUN --mount=id=apt,sharing=private,target=/var/cache/apt,type=cache \
-    --mount=id=apt_lists,sharing=private,target=/var/lib/apt/lists,type=cache \
-    apt-get update && \
+RUN apt-get update && \
     [ ! -n "$CI" ] && apt-get dist-upgrade -y || : && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y \
     automake autoconf build-essential clang-14 cmake devscripts libtool pkg-config \
@@ -20,12 +17,12 @@ RUN --mount=id=apt,sharing=private,target=/var/cache/apt,type=cache \
     && apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get build-dep -y transmission \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y nodejs \
+    && apt-get autoremove -y && apt clean && rm -fr /var/lib/apt/lists/* /var/log/* /tmp/* \
     && corepack enable
 
 WORKDIR /opt/transmission
 ARG YARN_CACHE_FOLDER=/root/.yarn
-RUN --mount=id=yarn,target=/root/.yarn,type=cache \
-    git clone --depth 1 --recurse-submodules --shallow-submodules https://github.com/transmission/transmission.git . \
+RUN git clone --depth 1 --recurse-submodules --shallow-submodules https://github.com/transmission/transmission.git . \
     && sed -i '/^.*lock"/a \ \ COMMAND ${CMAKE_COMMAND} -E create_symlink "${CMAKE_CURRENT_BINARY_DIR}/node_modules" "${CMAKE_CURRENT_SOURCE_DIR}/node_modules"' web/CMakeLists.txt \
     && mkdir build \ && cd build \
     && cmake .. \
@@ -34,14 +31,14 @@ RUN --mount=id=yarn,target=/root/.yarn,type=cache \
 	-DENABLE_GTK=OFF \
 	-DENABLE_QT=OFF \
 	-DENABLE_TESTS=OFF \
-	-DENABLE_WEB=ON \
+	-DENABLE_WEB=OFF \
 	-DINSTALL_DOC=OFF \
 	-DINSTALL_LIB=ON \
 	-DRUN_CLANG_TIDY=OFF \
     && make
 
 
-FROM alpine:latest as TransmissionUIs
+FROM alpine:latest as transmission_uis
 
 RUN apk --no-cache add curl jq \
     && mkdir -p /opt/transmission-ui \
@@ -60,16 +57,14 @@ RUN apk --no-cache add curl jq \
     && curl -sL $(curl -s https://api.github.com/repos/ronggang/transmission-web-control/releases/latest | jq --raw-output '.tarball_url') | tar -C /opt/transmission-ui/transmission-web-control/ --strip-components=2 -xz
 
 
-FROM ubuntu:22.04
+FROM ubuntu:22.04 as transmission
 
 VOLUME /data
 VOLUME /config
 
-COPY --from=TransmissionUIs /opt/transmission-ui /opt/transmission-ui
+COPY --from=transmission_uis /opt/transmission-ui /opt/transmission-ui
 
-RUN --mount=id=apt,sharing=private,target=/var/cache/apt,type=cache \
-    --mount=id=aptlists,sharing=private,target=/var/lib/apt/lists,type=cache \
-    apt-get update && DEBIAN_FRONTEND=noninteractive apt-get dist-upgrade -y && \
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get dist-upgrade -y && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y \
     dumb-init openvpn transmission-daemon transmission-cli privoxy libdeflate0 \
     tzdata dnsutils iputils-ping ufw openssh-client git jq curl wget unrar unzip bc \
@@ -77,18 +72,18 @@ RUN --mount=id=apt,sharing=private,target=/var/cache/apt,type=cache \
     && ln -s /usr/share/transmission/web/images /opt/transmission-ui/transmission-web-control \
     && ln -s /usr/share/transmission/web/javascript /opt/transmission-ui/transmission-web-control \
     && ln -s /usr/share/transmission/web/index.html /opt/transmission-ui/transmission-web-control/index.original.html \
-    && apt-get autoremove -y && rm -fr /var/log/* /tmp/* \
+    && apt-get autoremove -y && apt clean && rm -fr /var/lib/apt/lists/* /var/log/* /tmp/* \
     && groupmod -g 1000 users \
     && useradd -u 911 -U -d /config -s /bin/false abc \
     && usermod -G users abc
 
-COPY --from=TransmissionBuild /opt/transmission/build/cli/transmission-cli /usr/bin/transmission-cli
-COPY --from=TransmissionBuild /opt/transmission/build/daemon/transmission-daemon /usr/bin/transmission-daemon
-COPY --from=TransmissionBuild /opt/transmission/build/utils/transmission-create /usr/bin/transmission-create
-COPY --from=TransmissionBuild /opt/transmission/build/utils/transmission-edit /usr/bin/transmission-edit
-COPY --from=TransmissionBuild /opt/transmission/build/utils/transmission-remote /usr/bin/transmission-remote
-COPY --from=TransmissionBuild /opt/transmission/build/utils/transmission-show /usr/bin/transmission-show
-COPY --from=TransmissionBuild /opt/transmission/web/public_html /opt/transmission-ui/trweb
+COPY --from=transmission_build /opt/transmission/build/cli/transmission-cli /usr/bin/transmission-cli
+COPY --from=transmission_build /opt/transmission/build/daemon/transmission-daemon /usr/bin/transmission-daemon
+COPY --from=transmission_build /opt/transmission/build/utils/transmission-create /usr/bin/transmission-create
+COPY --from=transmission_build /opt/transmission/build/utils/transmission-edit /usr/bin/transmission-edit
+COPY --from=transmission_build /opt/transmission/build/utils/transmission-remote /usr/bin/transmission-remote
+COPY --from=transmission_build /opt/transmission/build/utils/transmission-show /usr/bin/transmission-show
+#COPY --from=transmission_build /opt/transmission/build/web/public_html /opt/transmission-ui/trweb
 
 # Add configuration and scripts
 ADD openvpn/ /etc/openvpn/

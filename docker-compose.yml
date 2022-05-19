@@ -12,7 +12,7 @@ services:
     - "8888:8888"
   dns:
     - 8.8.8.8
-    - 8.8.4.4
+    - 1.1.1.1
   volumes:
     - /etc/localtime:/etc/localtime:ro
     - /your/storage/path/:/data
