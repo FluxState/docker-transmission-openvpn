@@ -1,4 +1,4 @@
-FROM ubuntu:22.04 as transmission_build
+FROM ubuntu:latest as transmission_build
 
 ARG CACHEBUST="1"
 RUN echo "$CACHEBUST"
@@ -57,7 +57,7 @@ RUN apk --no-cache add curl jq \
     && curl -sL $(curl -s https://api.github.com/repos/ronggang/transmission-web-control/releases/latest | jq --raw-output '.tarball_url') | tar -C /opt/transmission-ui/transmission-web-control/ --strip-components=2 -xz
 
 
-FROM ubuntu:22.04 as transmission
+FROM ubuntu:latest as transmission
 
 VOLUME /data
 VOLUME /config
@@ -138,4 +138,5 @@ EXPOSE 9091
 # Privoxy
 EXPOSE 8118
 
-CMD ["dumb-init", "/etc/openvpn/start.sh"]
+ENTRYPOINT ["dumb-init", "--"]
+CMD ["/etc/openvpn/start.sh"]
