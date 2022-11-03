@@ -1,6 +1,6 @@
 FROM ubuntu:latest as transmission_build
 
-ARG CACHEBUST="1"
+ARG CACHEBUST=""
 RUN echo "$CACHEBUST"
 ARG CI=""
 
