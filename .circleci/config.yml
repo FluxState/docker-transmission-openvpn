@@ -24,6 +24,12 @@ commands:
             echo "export REVISION='${REVISION}-${CIRCLE_SHA1}'" >> $BASH_ENV
             echo "export TAG_VERSION='$TAG_VERSION'" >> $BASH_ENV
 
+  setup-remote-docker:
+    steps:
+      - setup_remote_docker:
+          version: 20.10.14
+          docker_layer_caching: true
+
   login-to-dockerhub:
     description: "Logs into DockerHub."
     steps:
@@ -91,6 +97,7 @@ jobs:
     steps:
       - git-shallow-clone/checkout:
           fetch_depth: 1
+      - setup-remote-docker
       - login-to-dockerhub
       - calculate-tag-name
       - build-and-push:
@@ -104,6 +111,7 @@ jobs:
     steps:
       - git-shallow-clone/checkout:
           fetch_depth: 1
+      - setup-remote-docker
       - login-to-dockerhub
       - calculate-tag-name
       - build-and-push:
@@ -114,6 +122,7 @@ jobs:
   manifest:
     <<: *defaults
     steps:
+      - setup-remote-docker
       - login-to-dockerhub
       - calculate-tag-name
       - create-manifest:
