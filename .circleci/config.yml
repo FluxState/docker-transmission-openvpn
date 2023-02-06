@@ -76,8 +76,6 @@ commands:
 defaults: &defaults
   environment:
     DEBIAN_FRONTEND: "noninteractive"
-  docker:
-    - image: cimg/base:current
   parameters:
     image-name:
       type: string
@@ -94,6 +92,8 @@ build-defaults: &build-defaults
 jobs:
   build:
     <<: *build-defaults
+    docker:
+      - image: cimg/base:current
     steps:
       - git-shallow-clone/checkout:
           fetch_depth: 1
@@ -107,11 +107,12 @@ jobs:
 
   build-arm:
     <<: *build-defaults
+    machine:
+      image: ubuntu-2004:202101-01
     resource_class: arm.medium
     steps:
       - git-shallow-clone/checkout:
           fetch_depth: 1
-      - setup-remote-docker
       - login-to-dockerhub
       - calculate-tag-name
       - build-and-push:
@@ -121,6 +122,8 @@ jobs:
 
   manifest:
     <<: *defaults
+    docker:
+      - image: cimg/base:current
     steps:
       - setup-remote-docker
       - login-to-dockerhub
