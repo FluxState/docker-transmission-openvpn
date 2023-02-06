@@ -24,11 +24,12 @@ commands:
             echo "export REVISION='${REVISION}-${CIRCLE_SHA1}'" >> $BASH_ENV
             echo "export TAG_VERSION='$TAG_VERSION'" >> $BASH_ENV
 
-  setup-remote-docker:
+  install-git:
+    description: "Installs Git binary."
     steps:
-      - setup_remote_docker:
-          version: 20.10.14
-          docker_layer_caching: true
+      - run:
+          name: Install Git binary
+          command: sudo apt-get update && DEBIAN_FRONTEND=noninteractive sudo apt-get install -y git
 
   login-to-dockerhub:
     description: "Logs into DockerHub."
@@ -76,6 +77,9 @@ commands:
 defaults: &defaults
   environment:
     DEBIAN_FRONTEND: "noninteractive"
+    DOCKER_BUILDKIT: "1"
+  machine:
+    image: ubuntu-2004:202111-02
   parameters:
     image-name:
       type: string
@@ -92,12 +96,10 @@ build-defaults: &build-defaults
 jobs:
   build:
     <<: *build-defaults
-    docker:
-      - image: cimg/base:current
     steps:
       - git-shallow-clone/checkout:
           fetch_depth: 1
-      - setup-remote-docker
+      - install-git
       - login-to-dockerhub
       - calculate-tag-name
       - build-and-push:
@@ -107,12 +109,11 @@ jobs:
 
   build-arm:
     <<: *build-defaults
-    machine:
-      image: ubuntu-2004:202101-01
     resource_class: arm.medium
     steps:
       - git-shallow-clone/checkout:
           fetch_depth: 1
+      - install-git
       - login-to-dockerhub
       - calculate-tag-name
       - build-and-push:
@@ -122,10 +123,7 @@ jobs:
 
   manifest:
     <<: *defaults
-    docker:
-      - image: cimg/base:current
     steps:
-      - setup-remote-docker
       - login-to-dockerhub
       - calculate-tag-name
       - create-manifest:
