@@ -24,13 +24,6 @@ commands:
             echo "export REVISION='${REVISION}-${CIRCLE_SHA1}'" >> $BASH_ENV
             echo "export TAG_VERSION='$TAG_VERSION'" >> $BASH_ENV
 
-  install-git:
-    description: "Installs Git binary."
-    steps:
-      - run:
-          name: Install Git binary
-          command: sudo apt-get update && DEBIAN_FRONTEND=noninteractive sudo apt-get install -y git
-
   login-to-dockerhub:
     description: "Logs into DockerHub."
     steps:
@@ -78,7 +71,7 @@ defaults: &defaults
   environment:
     DEBIAN_FRONTEND: "noninteractive"
   machine:
-    image: cimg/base:current
+    - image: cimg/base:current
   parameters:
     image-name:
       type: string
@@ -98,7 +91,6 @@ jobs:
     steps:
       - git-shallow-clone/checkout:
           fetch_depth: 1
-      - install-git
       - login-to-dockerhub
       - calculate-tag-name
       - build-and-push:
@@ -112,7 +104,6 @@ jobs:
     steps:
       - git-shallow-clone/checkout:
           fetch_depth: 1
-      - install-git
       - login-to-dockerhub
       - calculate-tag-name
       - build-and-push:
