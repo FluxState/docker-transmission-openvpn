@@ -70,9 +70,8 @@ commands:
 defaults: &defaults
   environment:
     DEBIAN_FRONTEND: "noninteractive"
-    DOCKER_BUILDKIT: "1"
-  machine:
-    image: cimg/base:current
+  docker:
+    - image: cimg/base:current
   parameters:
     image-name:
       type: string
