@@ -31,7 +31,7 @@ RUN git clone --depth 1 --recurse-submodules --shallow-submodules https://github
 	-DENABLE_GTK=OFF \
 	-DENABLE_QT=OFF \
 	-DENABLE_TESTS=OFF \
-	-DENABLE_WEB=OFF \
+	-DREBUILD_WEB=OFF \
 	-DINSTALL_DOC=OFF \
 	-DINSTALL_LIB=ON \
 	-DRUN_CLANG_TIDY=OFF \
