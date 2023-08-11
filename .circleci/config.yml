@@ -1,7 +1,7 @@
 version: 2.1
 
 orbs:
-  git-shallow-clone: guitarrapc/git-shallow-clone@2.4.1
+  git-shallow-clone: guitarrapc/git-shallow-clone@2.6.0
 
 commands:
   calculate-tag-name:
@@ -79,7 +79,7 @@ defaults: &defaults
     DEBIAN_FRONTEND: "noninteractive"
     DOCKER_BUILDKIT: "1"
   machine:
-    image: ubuntu-2004:202111-02
+    image: ubuntu-2204:2023.07.2
   parameters:
     image-name:
       type: string

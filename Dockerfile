@@ -22,7 +22,7 @@ RUN apt-get update && \
 
 WORKDIR /opt/transmission
 ARG YARN_CACHE_FOLDER=/tmp/.yarn
-RUN git clone --depth 1 --recurse-submodules --shallow-submodules https://github.com/transmission/transmission.git . \
+RUN git clone --recurse-submodules --shallow-submodules https://github.com/transmission/transmission.git . && git reset --hard 6b0e49bbb296f1c84785275b8a8f18b4210180af \
     && sed -i '/^.*lock"/a \ \ COMMAND ${CMAKE_COMMAND} -E create_symlink "${CMAKE_CURRENT_BINARY_DIR}/node_modules" "${CMAKE_CURRENT_SOURCE_DIR}/node_modules"' web/CMakeLists.txt \
     && mkdir build \ && cd build \
     && cmake .. \
